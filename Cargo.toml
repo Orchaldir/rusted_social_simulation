@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "rusted_conversation",
+    "rusted_social_simulation"
+]
