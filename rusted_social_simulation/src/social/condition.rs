@@ -85,9 +85,45 @@ impl<T> Condition<T> for AndCondition<T> {
     }
 }
 
+/// A condition that evaluates to true, if any sub-condition is true.
+pub struct OrCondition<T> {
+    conditions: Vec<Box<dyn Condition<T>>>,
+}
+
+impl<T> OrCondition<T> {
+    pub fn new(conditions: Vec<Box<dyn Condition<T>>>) -> OrCondition<T> {
+        OrCondition { conditions }
+    }
+}
+
+impl<T> Condition<T> for OrCondition<T> {
+    /// Returns true, if any sub-condition is true.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::*;
+    /// let true0 = Box::new(MockCondition::new(true));
+    /// let false0 = Box::new(MockCondition::new(false));
+    ///
+    /// assert!(OrCondition::new(vec![true0, false0]).evaluate(&42));
+    /// ```
+    fn evaluate(&self, context: &T) -> bool {
+        for condition in &self.conditions {
+            if condition.evaluate(context) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_empty_and() {
+        assert_eq!(AndCondition::new(Vec::new()).evaluate(&42), true);
+    }
 
     #[test]
     fn test_and() {
@@ -101,11 +137,36 @@ mod tests {
         assert_and(true, true, true, true);
     }
 
+    #[test]
+    fn test_empty_or() {
+        assert_eq!(OrCondition::new(Vec::new()).evaluate(&42), false);
+    }
+
+    #[test]
+    fn test_or() {
+        assert_or(false, false, false, false);
+        assert_or(true, false, false, true);
+        assert_or(false, true, false, true);
+        assert_or(true, true, false, true);
+        assert_or(false, false, true, true);
+        assert_or(true, false, true, true);
+        assert_or(false, true, true, true);
+        assert_or(true, true, true, true);
+    }
+
     fn assert_and(value0: bool, value1: bool, value2: bool, result: bool) {
         let c0 = Box::new(MockCondition::new(value0));
         let c1 = Box::new(MockCondition::new(value1));
         let c2 = Box::new(MockCondition::new(value2));
 
         assert_eq!(AndCondition::new(vec![c0, c1, c2]).evaluate(&42), result);
+    }
+
+    fn assert_or(value0: bool, value1: bool, value2: bool, result: bool) {
+        let c0 = Box::new(MockCondition::new(value0));
+        let c1 = Box::new(MockCondition::new(value1));
+        let c2 = Box::new(MockCondition::new(value2));
+
+        assert_eq!(OrCondition::new(vec![c0, c1, c2]).evaluate(&42), result);
     }
 }
