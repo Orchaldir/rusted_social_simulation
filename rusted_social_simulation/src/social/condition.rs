@@ -11,8 +11,7 @@ impl<T> Condition<T> for TrueCondition {
     ///
     /// ```
     ///# use rusted_social_simulation::social::condition::{TrueCondition, Condition};
-    /// let condition = TrueCondition{};
-    /// assert!(condition.evaluate(&42))
+    /// assert!(TrueCondition.evaluate(&42))
     /// ```
     fn evaluate(&self, _: &T) -> bool {
         true
@@ -27,10 +26,33 @@ impl<T> Condition<T> for FalseCondition {
     ///
     /// ```
     ///# use rusted_social_simulation::social::condition::{FalseCondition, Condition};
-    /// let condition = FalseCondition{};
-    /// assert!(!condition.evaluate(&42))
+    /// assert!(!FalseCondition.evaluate(&42))
     /// ```
     fn evaluate(&self, _: &T) -> bool {
         false
+    }
+}
+
+/// A condition that negates the evaluation of another condition
+pub struct NotCondition<T> {
+    condition: Box<dyn Condition<T>>,
+}
+
+impl<T> NotCondition<T> {
+    pub fn new(condition: Box<dyn Condition<T>>) -> NotCondition<T> {
+        NotCondition { condition }
+    }
+}
+
+impl<T> Condition<T> for NotCondition<T> {
+    /// Returns the hegated evaluation of another conition.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::{FalseCondition, Condition, NotCondition};
+    /// let not = NotCondition::new(Box::new(FalseCondition));
+    /// assert!(not.evaluate(&42))
+    /// ```
+    fn evaluate(&self, context: &T) -> bool {
+        !self.condition.evaluate(context)
     }
 }
