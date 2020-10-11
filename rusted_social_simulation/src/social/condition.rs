@@ -18,3 +18,19 @@ impl<T> Condition<T> for TrueCondition {
         true
     }
 }
+
+/// A condition that always evaluates to false.
+pub struct FalseCondition;
+
+impl<T> Condition<T> for FalseCondition {
+    /// Always returns false.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::{FalseCondition, Condition};
+    /// let condition = FalseCondition{};
+    /// assert!(!condition.evaluate(&42))
+    /// ```
+    fn evaluate(&self, _: &T) -> bool {
+        false
+    }
+}
