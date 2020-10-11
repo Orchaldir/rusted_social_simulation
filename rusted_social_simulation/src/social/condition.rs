@@ -3,33 +3,27 @@ pub trait Condition<T> {
     fn evaluate(&self, context: &T) -> bool;
 }
 
-/// A condition that always evaluates to true.
-pub struct TrueCondition;
+/// A condition that always evaluates to a fixed value.
+pub struct MockCondition {
+    value: bool
+}
 
-impl<T> Condition<T> for TrueCondition {
-    /// Always returns true.
-    ///
-    /// ```
-    ///# use rusted_social_simulation::social::condition::{TrueCondition, Condition};
-    /// assert!(TrueCondition.evaluate(&42))
-    /// ```
-    fn evaluate(&self, _: &T) -> bool {
-        true
+impl MockCondition {
+    pub fn new(value: bool) -> MockCondition {
+        MockCondition { value }
     }
 }
 
-/// A condition that always evaluates to false.
-pub struct FalseCondition;
-
-impl<T> Condition<T> for FalseCondition {
-    /// Always returns false.
+impl<T> Condition<T> for MockCondition {
+    /// Always returns a fixed value.
     ///
     /// ```
-    ///# use rusted_social_simulation::social::condition::{FalseCondition, Condition};
-    /// assert!(!FalseCondition.evaluate(&42))
+    ///# use rusted_social_simulation::social::condition::{MockCondition, Condition};
+    /// assert!(MockCondition::new(true).evaluate(&42));
+    /// assert!(!MockCondition::new(false).evaluate(&42));
     /// ```
     fn evaluate(&self, _: &T) -> bool {
-        false
+        self.value
     }
 }
 
@@ -49,8 +43,8 @@ impl<T> Condition<T> for NotCondition<T> {
     ///
     /// ```
     ///# use rusted_social_simulation::social::condition::*;
-    /// let not_with_false = NotCondition::new(Box::new(FalseCondition));
-    /// let not_with_true = NotCondition::new(Box::new(TrueCondition));
+    /// let not_with_false = NotCondition::new(Box::new(MockCondition::new(false)));
+    /// let not_with_true = NotCondition::new(Box::new(MockCondition::new(true)));
     ///
     /// assert!(not_with_false.evaluate(&42));
     /// assert!(!not_with_true.evaluate(&42))
@@ -76,8 +70,8 @@ impl<T> Condition<T> for AndCondition<T> {
     ///
     /// ```
     ///# use rusted_social_simulation::social::condition::*;
-    /// let true0 = Box::new(TrueCondition);
-    /// let true1 = Box::new(TrueCondition);
+    /// let true0 = Box::new(MockCondition::new(true));
+    /// let true1 = Box::new(MockCondition::new(true));
     ///
     /// assert!(AndCondition::new(vec![true0, true1]).evaluate(&42));
     /// ```
@@ -88,5 +82,30 @@ impl<T> Condition<T> for AndCondition<T> {
             }
         }
         true
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_and() {
+        assert_and(false, false, false, false);
+        assert_and(true, false, false, false);
+        assert_and(false, true, false, false);
+        assert_and(true, true, false, false);
+        assert_and(false, false, true, false);
+        assert_and(true, false, true, false);
+        assert_and(false, true, true, false);
+        assert_and(true, true, true, true);
+    }
+
+    fn assert_and(value0: bool, value1: bool, value2: bool, result: bool) {
+        let c0 = Box::new(MockCondition::new(value0));
+        let c1 = Box::new(MockCondition::new(value1));
+        let c2 = Box::new(MockCondition::new(value2));
+
+        assert_eq!(AndCondition::new(vec![c0, c1, c2]).evaluate(&42), result);
     }
 }
