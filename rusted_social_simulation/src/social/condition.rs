@@ -59,3 +59,34 @@ impl<T> Condition<T> for NotCondition<T> {
         !self.condition.evaluate(context)
     }
 }
+
+/// A condition that evaluates to true, if all sub-conditions are true.
+pub struct AndCondition<T> {
+    conditions: Vec<Box<dyn Condition<T>>>,
+}
+
+impl<T> AndCondition<T> {
+    pub fn new(conditions: Vec<Box<dyn Condition<T>>>) -> AndCondition<T> {
+        AndCondition { conditions }
+    }
+}
+
+impl<T> Condition<T> for AndCondition<T> {
+    /// Returns true, if all sub-conditions are true.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::*;
+    /// let true0 = Box::new(TrueCondition);
+    /// let true1 = Box::new(TrueCondition);
+    ///
+    /// assert!(AndCondition::new(vec![true0, true1]).evaluate(&42));
+    /// ```
+    fn evaluate(&self, context: &T) -> bool {
+        for condition in &self.conditions {
+            if !condition.evaluate(context) {
+                return false;
+            }
+        }
+        true
+    }
+}
