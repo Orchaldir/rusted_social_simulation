@@ -5,7 +5,7 @@ pub trait Condition<T> {
 
 /// A condition that always evaluates to a fixed value.
 pub struct MockCondition {
-    value: bool
+    value: bool,
 }
 
 impl MockCondition {
