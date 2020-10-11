@@ -45,12 +45,15 @@ impl<T> NotCondition<T> {
 }
 
 impl<T> Condition<T> for NotCondition<T> {
-    /// Returns the hegated evaluation of another conition.
+    /// Returns the negated evaluation of another conition.
     ///
     /// ```
-    ///# use rusted_social_simulation::social::condition::{FalseCondition, Condition, NotCondition};
-    /// let not = NotCondition::new(Box::new(FalseCondition));
-    /// assert!(not.evaluate(&42))
+    ///# use rusted_social_simulation::social::condition::*;
+    /// let not_with_false = NotCondition::new(Box::new(FalseCondition));
+    /// let not_with_true = NotCondition::new(Box::new(TrueCondition));
+    ///
+    /// assert!(not_with_false.evaluate(&42));
+    /// assert!(!not_with_true.evaluate(&42))
     /// ```
     fn evaluate(&self, context: &T) -> bool {
         !self.condition.evaluate(context)
