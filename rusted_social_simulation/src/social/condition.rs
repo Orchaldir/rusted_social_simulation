@@ -155,18 +155,22 @@ mod tests {
     }
 
     fn assert_and(value0: bool, value1: bool, value2: bool, result: bool) {
-        let c0 = Box::new(MockCondition::new(value0));
-        let c1 = Box::new(MockCondition::new(value1));
-        let c2 = Box::new(MockCondition::new(value2));
+        let c0 = boxed(value0);
+        let c1 = boxed(value1);
+        let c2 = boxed(value2);
 
         assert_eq!(AndCondition::new(vec![c0, c1, c2]).evaluate(&42), result);
     }
 
     fn assert_or(value0: bool, value1: bool, value2: bool, result: bool) {
-        let c0 = Box::new(MockCondition::new(value0));
-        let c1 = Box::new(MockCondition::new(value1));
-        let c2 = Box::new(MockCondition::new(value2));
+        let c0 = boxed(value0);
+        let c1 = boxed(value1);
+        let c2 = boxed(value2);
 
         assert_eq!(OrCondition::new(vec![c0, c1, c2]).evaluate(&42), result);
+    }
+
+    fn boxed(value: bool) -> Box<MockCondition> {
+        Box::new(MockCondition::new(value))
     }
 }
