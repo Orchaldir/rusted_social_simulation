@@ -1,17 +1,19 @@
 use crate::social::condition::Condition;
 
+type Utility = i32;
+
 /// A utility rule can be used to calculate the utility of something (e.g. an action) for a given context.
 pub trait UtilityRule<T> {
-    fn calculate_utility(&self, context: &T) -> i32;
+    fn calculate_utility(&self, context: &T) -> Utility;
 }
 
 /// An utility rule that has a fixed utility.
 pub struct FixedUtility {
-    utility: i32,
+    utility: Utility,
 }
 
 impl FixedUtility {
-    pub fn new(utility: i32) -> FixedUtility {
+    pub fn new(utility: Utility) -> FixedUtility {
         FixedUtility { utility }
     }
 }
@@ -23,7 +25,7 @@ impl<T> UtilityRule<T> for FixedUtility {
     ///# use rusted_social_simulation::social::utility::{FixedUtility, UtilityRule};
     /// assert_eq!(FixedUtility::new(9).calculate_utility(&42), 9);
     /// ```
-    fn calculate_utility(&self, _: &T) -> i32 {
+    fn calculate_utility(&self, _: &T) -> Utility {
         self.utility
     }
 }
@@ -31,11 +33,11 @@ impl<T> UtilityRule<T> for FixedUtility {
 /// An utility rule with an utility based on a condition.
 pub struct ConditionalUtility<T> {
     condition: Box<dyn Condition<T>>,
-    utility: i32,
+    utility: Utility,
 }
 
 impl<T> ConditionalUtility<T> {
-    pub fn new(condition: Box<dyn Condition<T>>, utility: i32) -> ConditionalUtility<T> {
+    pub fn new(condition: Box<dyn Condition<T>>, utility: Utility) -> ConditionalUtility<T> {
         ConditionalUtility { condition, utility }
     }
 }
@@ -52,7 +54,7 @@ impl<T> UtilityRule<T> for ConditionalUtility<T> {
     /// assert_eq!(with_false.calculate_utility(&42), 0);
     /// assert_eq!(with_true.calculate_utility(&42), 78);
     /// ```
-    fn calculate_utility(&self, context: &T) -> i32 {
+    fn calculate_utility(&self, context: &T) -> Utility {
         if self.condition.evaluate(context) {
             self.utility
         } else {
