@@ -79,7 +79,7 @@ impl<T> UtilityRule<T> for TotalUtility<T> {
     ///
     /// ```
     ///# use rusted_social_simulation::social::condition::*;
-    ///# use rusted_social_simulation::social::utility::{ConditionalUtility, UtilityRule, TotalUtility, FixedUtility};
+    ///# use rusted_social_simulation::social::utility::{UtilityRule, TotalUtility, FixedUtility};
     /// let sum = TotalUtility::new(vec![Box::new(FixedUtility::new(9)), Box::new(FixedUtility::new(5))]);
     ///
     /// assert_eq!(sum.calculate_utility(&42), 14);
@@ -89,5 +89,35 @@ impl<T> UtilityRule<T> for TotalUtility<T> {
             .iter()
             .map(|r| r.calculate_utility(context))
             .sum()
+    }
+}
+
+/// The maximum of multiple utility rules.
+pub struct MaxUtility<T> {
+    rules: Vec<Box<dyn UtilityRule<T>>>,
+}
+
+impl<T> MaxUtility<T> {
+    pub fn new(rules: Vec<Box<dyn UtilityRule<T>>>) -> MaxUtility<T> {
+        MaxUtility { rules }
+    }
+}
+
+impl<T> UtilityRule<T> for MaxUtility<T> {
+    /// Returns the maximum of multiple utility rules.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::*;
+    ///# use rusted_social_simulation::social::utility::{UtilityRule, MaxUtility, FixedUtility};
+    /// let sum = MaxUtility::new(vec![Box::new(FixedUtility::new(9)), Box::new(FixedUtility::new(5))]);
+    ///
+    /// assert_eq!(sum.calculate_utility(&42), 9);
+    /// ```
+    fn calculate_utility(&self, context: &T) -> Utility {
+        self.rules
+            .iter()
+            .map(|r| r.calculate_utility(context))
+            .max()
+            .unwrap_or(0)
     }
 }
