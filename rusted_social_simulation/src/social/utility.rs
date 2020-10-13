@@ -62,3 +62,32 @@ impl<T> UtilityRule<T> for ConditionalUtility<T> {
         }
     }
 }
+
+/// The sum of multiple utility rules.
+pub struct TotalUtility<T> {
+    rules: Vec<Box<dyn UtilityRule<T>>>,
+}
+
+impl<T> TotalUtility<T> {
+    pub fn new(rules: Vec<Box<dyn UtilityRule<T>>>) -> TotalUtility<T> {
+        TotalUtility { rules }
+    }
+}
+
+impl<T> UtilityRule<T> for TotalUtility<T> {
+    /// Returns the sum of multiple utility rules.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::*;
+    ///# use rusted_social_simulation::social::utility::{ConditionalUtility, UtilityRule, TotalUtility, FixedUtility};
+    /// let sum = TotalUtility::new(vec![Box::new(FixedUtility::new(9)), Box::new(FixedUtility::new(5))]);
+    ///
+    /// assert_eq!(sum.calculate_utility(&42), 14);
+    /// ```
+    fn calculate_utility(&self, context: &T) -> Utility {
+        self.rules
+            .iter()
+            .map(|r| r.calculate_utility(context))
+            .sum()
+    }
+}
