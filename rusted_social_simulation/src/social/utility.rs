@@ -1,6 +1,8 @@
 use crate::social::condition::Condition;
 
-type Utility = i32;
+/// The utility of something determines how useful it us under the current context.
+/// A higher value is better.
+pub type Utility = i32;
 
 /// A utility rule can be used to calculate the utility of something (e.g. an action) for a given context.
 pub trait UtilityRule<T> {
