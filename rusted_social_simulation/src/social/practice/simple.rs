@@ -1,6 +1,6 @@
 use crate::social::action::{Action, MockAction};
 use crate::social::practice::role::Role;
-use crate::social::practice::PracticeTemplate;
+use crate::social::practice::{Practice, PracticeTemplate};
 use std::collections::HashMap;
 
 /// A simple implementation of PracticeTemplate.
@@ -123,12 +123,127 @@ impl<T> PracticeTemplate<T> for SimplePracticeTemplate<T> {
     /// template.get_role_name(unknown_role);
     /// ```
     fn get_role_name(&self, role: Role) -> &str {
-        self.role_names
-            .get(&role)
-            .unwrap_or_else(|| panic!("Action {} doesn't have the role {}!", self.name, role))
+        self.role_names.get(&role).unwrap_or_else(|| {
+            panic!(
+                "PracticeTemplate '{}' doesn't have the role {}!",
+                self.name, role
+            )
+        })
     }
 }
 
+/// A simple implementation of PracticeTemplate.
+pub struct SimplePractice<'a, T> {
+    id: u32,
+    role_to_id_map: HashMap<Role, u32>,
+    template: &'a dyn PracticeTemplate<T>,
+}
+
+impl<'a, T> SimplePractice<'a, T> {
+    pub fn new(
+        id: u32,
+        role_to_id_map: HashMap<Role, u32>,
+        template: &dyn PracticeTemplate<T>,
+    ) -> SimplePractice<T> {
+        SimplePractice {
+            id,
+            role_to_id_map,
+            template,
+        }
+    }
+}
+
+impl<'a, T> Practice<T> for SimplePractice<'a, T> {
+    /// Gets all actions of an entity in this practice.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::practice::role::Role;
+    ///# use rusted_social_simulation::social::practice::simple::{create_test_template, create_test_practice};
+    ///# use rusted_social_simulation::social::practice::{PracticeTemplate, Practice};
+    /// let template = create_test_template();
+    /// let practice = create_test_practice(&template);
+    ///
+    /// let actions = practice.get_actions(10);
+    ///
+    /// assert_eq!(actions.len(), 2);
+    /// assert_eq!(actions.get(0).unwrap().get_name(), "action0");
+    /// assert_eq!(actions.get(1).unwrap().get_name(), "action1");
+    /// ```
+    fn get_actions(&self, entity: u32) -> Vec<&dyn Action<T>> {
+        let role = self.get_role(entity);
+        self.template.get_actions(role)
+    }
+
+    /// Gets the id of this social practice.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::practice::simple::{create_test_template, create_test_practice};
+    ///# use rusted_social_simulation::social::practice::{PracticeTemplate, Practice};
+    /// let template = create_test_template();
+    /// let practice = create_test_practice(&template);
+    ///
+    /// assert_eq!(practice.get_id(), 5);
+    /// ```
+    fn get_id(&self) -> u32 {
+        self.id
+    }
+
+    /// Gets the role of an entity that participate in this practice.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::practice::role::Role;
+    ///# use rusted_social_simulation::social::practice::simple::{create_test_template, create_test_practice};
+    ///# use rusted_social_simulation::social::practice::{PracticeTemplate, Practice};
+    /// let template = create_test_template();
+    /// let practice = create_test_practice(&template);
+    ///
+    /// assert_eq!(practice.get_role(10), Role::Character { id: 0 });
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// ```should_panic
+    ///# use rusted_social_simulation::social::practice::role::Role;
+    ///# use rusted_social_simulation::social::practice::simple::{create_test_template, create_test_practice};
+    ///# use rusted_social_simulation::social::practice::{PracticeTemplate, Practice};
+    /// let template = create_test_template();
+    /// let practice = create_test_practice(&template);
+    ///
+    /// practice.get_role(99);
+    /// ```
+    fn get_role(&self, entity: u32) -> Role {
+        for (role, id) in &self.role_to_id_map {
+            if *id == entity {
+                return *role;
+            }
+        }
+
+        panic!(
+            "Practice {} of template '{}' doesn't have the role for entity {}!",
+            self.id,
+            self.template.get_name(),
+            entity
+        );
+    }
+
+    /// Gets the template of this practice.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::practice::simple::{create_test_template, create_test_practice};
+    ///# use rusted_social_simulation::social::practice::{PracticeTemplate, Practice};
+    /// let template = create_test_template();
+    /// let practice = create_test_practice(&template);
+    ///
+    /// assert_eq!(practice.get_template().get_name(), "template0");
+    /// ```
+    fn get_template(&self) -> &dyn PracticeTemplate<T> {
+        self.template
+    }
+}
+
+/// Create a SimplePracticeTemplate for testing.
 pub fn create_test_template() -> SimplePracticeTemplate<u32> {
     let speaker = Role::Character { id: 0 };
     let listener = Role::Character { id: 1 };
@@ -148,12 +263,25 @@ pub fn create_test_template() -> SimplePracticeTemplate<u32> {
     SimplePracticeTemplate::new(42, "template0".to_string(), role_names, actions)
 }
 
+/// Create a SimplePractice for testing.
+pub fn create_test_practice(template: &dyn PracticeTemplate<u32>) -> SimplePractice<u32> {
+    let speaker = Role::Character { id: 0 };
+    let listener = Role::Character { id: 1 };
+
+    let role_to_id_map = hashmap! {
+        speaker => 10,
+        listener => 11,
+    };
+
+    SimplePractice::new(5, role_to_id_map, template)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_get_actions_for_passive_role() {
+    fn test_template_get_actions_for_passive_role() {
         let listener = Role::Character { id: 1 };
         let template = create_test_template();
 
@@ -161,7 +289,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_actions_for_unknown_role() {
+    fn test_template_get_actions_for_unknown_role() {
         let unknown_role = Role::Character { id: 99 };
         let template = create_test_template();
 

@@ -1,6 +1,5 @@
 use crate::social::action::Action;
 use crate::social::practice::role::Role;
-use std::collections::HashMap;
 
 pub mod role;
 pub mod simple;
@@ -36,8 +35,8 @@ pub trait Practice<T> {
     /// Gets the id of this social practice.
     fn get_id(&self) -> u32;
 
-    /// Gets the entity for each roles that participate in this practice.
-    fn get_roles(&self) -> &HashMap<Role, u32>;
+    /// Gets the role of an entity that participate in this practice.
+    fn get_role(&self, entity: u32) -> Role;
 
     /// Gets the template of this practice.
     fn get_template(&self) -> &dyn PracticeTemplate<T>;

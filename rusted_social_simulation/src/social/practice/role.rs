@@ -9,7 +9,7 @@ use core::fmt;
 /// let role0 = Role::Character{ id: 0 };
 /// let role1 = Role::Character{ id: 1 };
 /// ```
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Role {
     Character { id: u32 },
 }
