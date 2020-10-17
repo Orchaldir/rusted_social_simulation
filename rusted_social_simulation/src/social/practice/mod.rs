@@ -3,8 +3,12 @@ use crate::social::practice::role::Role;
 use std::collections::HashMap;
 
 pub mod role;
+pub mod simple;
 
 /// A template for a social practice.
+///
+/// It defines which roles participate in a social practice
+/// and which actions are available for each role.
 pub trait PracticeTemplate<T> {
     /// Gets all actions of a role in this practice template.
     fn get_actions(&self, role: Role) -> Vec<&dyn Action<T>>;
@@ -16,13 +20,15 @@ pub trait PracticeTemplate<T> {
     fn get_name(&self) -> &str;
 
     /// Gets all roles that participate in this practice template.
-    fn get_roles(&self) -> &Vec<Role>;
+    fn get_roles(&self) -> Vec<Role>;
 
     /// Gets the name of a role in this practice template.
     fn get_role_name(&self, role: Role) -> &str;
 }
 
 /// A social practice, which is an instance of a template.
+///
+/// It defines which entity participates as which role.
 pub trait Practice<T> {
     /// Gets all actions of an entity in this practice.
     fn get_actions(&self, entity: u32) -> Vec<&dyn Action<T>>;
