@@ -93,3 +93,41 @@ impl<T> Action<T> for SimpleAction<T> {
         self.effect.apply(context)
     }
 }
+
+/// A mock action for testing.
+pub struct MockAction;
+
+impl<T> Action<T> for MockAction {
+    /// Evaluates to true.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::action::{Action, MockAction};
+    ///
+    /// assert!(MockAction.is_available(&42));
+    /// ```
+    fn is_available(&self, _context: &T) -> bool {
+        true
+    }
+
+    /// Returns 0.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::action::{Action, MockAction};
+    /// assert_eq!(MockAction.get_utility(&42), 0);
+    /// ```
+    fn get_utility(&self, _context: &T) -> Utility {
+        0
+    }
+
+    /// Does nothing.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::action::{Action, MockAction};
+    /// let mut context = 42;
+    ///
+    /// MockAction.execute(&mut context);
+    ///
+    /// assert_eq!(context, 42);
+    /// ```
+    fn execute(&self, _context: &mut T) { }
+}
