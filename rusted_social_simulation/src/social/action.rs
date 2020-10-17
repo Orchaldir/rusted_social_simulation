@@ -4,6 +4,9 @@ use crate::social::utility::{Utility, UtilityRule};
 
 /// An action that can be executed in a social simulation.
 pub trait Action<T> {
+    /// Gets the name of the action.
+    fn get_name(&self) -> &str;
+
     /// Can the action be executed with the current context?
     fn is_available(&self, context: &T) -> bool;
 
@@ -16,6 +19,7 @@ pub trait Action<T> {
 
 /// A simple implementation of Action.
 pub struct SimpleAction<T> {
+    name: String,
     condition: Box<dyn Condition<T>>,
     utility_rule: Box<dyn UtilityRule<T>>,
     effect: Box<dyn Effect<T>>,
@@ -23,11 +27,13 @@ pub struct SimpleAction<T> {
 
 impl<T> SimpleAction<T> {
     pub fn new(
+        name: String,
         condition: Box<dyn Condition<T>>,
         utility_rule: Box<dyn UtilityRule<T>>,
         effect: Box<dyn Effect<T>>,
     ) -> SimpleAction<T> {
         SimpleAction {
+            name,
             condition,
             utility_rule,
             effect,
@@ -36,6 +42,24 @@ impl<T> SimpleAction<T> {
 }
 
 impl<T> Action<T> for SimpleAction<T> {
+    /// Gets the name of the action.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::condition::MockCondition;
+    ///# use rusted_social_simulation::social::utility::FixedUtility;
+    ///# use rusted_social_simulation::social::effect::DoNothing;
+    ///# use rusted_social_simulation::social::action::{Action, SimpleAction};
+    /// let condition = Box::new(MockCondition::new(true));
+    /// let utility_rule = Box::new(FixedUtility::new(0));
+    /// let effect = Box::new(DoNothing);
+    /// let action: SimpleAction<u32> = SimpleAction::new("action0".to_string(), condition, utility_rule, effect);
+    ///
+    /// assert_eq!(action.get_name(), "action0");
+    /// ```
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+
     /// Evaluates a condition to check, if the action is available.
     ///
     /// ```
@@ -46,7 +70,7 @@ impl<T> Action<T> for SimpleAction<T> {
     /// let condition = Box::new(MockCondition::new(true));
     /// let utility_rule = Box::new(FixedUtility::new(0));
     /// let effect = Box::new(DoNothing);
-    /// let action = SimpleAction::new(condition, utility_rule, effect);
+    /// let action = SimpleAction::new("a".to_string(), condition, utility_rule, effect);
     ///
     /// assert!(action.is_available(&42));
     /// ```
@@ -64,7 +88,7 @@ impl<T> Action<T> for SimpleAction<T> {
     /// let condition = Box::new(MockCondition::new(false));
     /// let utility_rule = Box::new(FixedUtility::new(13));
     /// let effect = Box::new(DoNothing);
-    /// let action = SimpleAction::new(condition, utility_rule, effect);
+    /// let action = SimpleAction::new("a".to_string(), condition, utility_rule, effect);
     ///
     /// assert_eq!(action.get_utility(&42), 13);
     /// ```
@@ -82,7 +106,7 @@ impl<T> Action<T> for SimpleAction<T> {
     /// let condition = Box::new(MockCondition::new(false));
     /// let utility_rule = Box::new(FixedUtility::new(0));
     /// let effect = Box::new(MockEffect::new(3));
-    /// let action = SimpleAction::new(condition, utility_rule, effect);
+    /// let action = SimpleAction::new("a".to_string(), condition, utility_rule, effect);
     /// let mut context = 42;
     ///
     /// action.execute(&mut context);
@@ -95,15 +119,36 @@ impl<T> Action<T> for SimpleAction<T> {
 }
 
 /// A mock action for testing.
-pub struct MockAction;
+pub struct MockAction {
+    name: String,
+}
+
+impl MockAction {
+    pub fn new(name: String) -> MockAction {
+        MockAction { name }
+    }
+}
 
 impl<T> Action<T> for MockAction {
+    /// Gets the name of the action.
+    ///
+    /// ```
+    ///# use rusted_social_simulation::social::action::{Action, MockAction};
+    /// let action = MockAction::new("action0".to_string());
+    ///
+    /// assert_eq!(Action::<u32>::get_name(&action), "action0");
+    /// ```
+    fn get_name(&self) -> &str {
+        &self.name
+    }
+
     /// Evaluates to true.
     ///
     /// ```
     ///# use rusted_social_simulation::social::action::{Action, MockAction};
+    /// let action = MockAction::new("action0".to_string());
     ///
-    /// assert!(MockAction.is_available(&42));
+    /// assert!(action.is_available(&42));
     /// ```
     fn is_available(&self, _context: &T) -> bool {
         true
@@ -113,7 +158,9 @@ impl<T> Action<T> for MockAction {
     ///
     /// ```
     ///# use rusted_social_simulation::social::action::{Action, MockAction};
-    /// assert_eq!(MockAction.get_utility(&42), 0);
+    /// let action = MockAction::new("action0".to_string());
+    ///
+    /// assert_eq!(action.get_utility(&42), 0);
     /// ```
     fn get_utility(&self, _context: &T) -> Utility {
         0
@@ -124,10 +171,11 @@ impl<T> Action<T> for MockAction {
     /// ```
     ///# use rusted_social_simulation::social::action::{Action, MockAction};
     /// let mut context = 42;
+    /// let action = MockAction::new("action0".to_string());
     ///
-    /// MockAction.execute(&mut context);
+    /// action.execute(&mut context);
     ///
     /// assert_eq!(context, 42);
     /// ```
-    fn execute(&self, _context: &mut T) { }
+    fn execute(&self, _context: &mut T) {}
 }
